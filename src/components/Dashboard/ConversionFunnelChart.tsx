@@ -1,5 +1,5 @@
 import React from 'react';
-import { Funnel, TrendingDown } from 'lucide-react';
+import { Fuel as Funnel, TrendingDown } from 'lucide-react';
 
 const ConversionFunnelChart: React.FC = () => {
   const funnelData = [
