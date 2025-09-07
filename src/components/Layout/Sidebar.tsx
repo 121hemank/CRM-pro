@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import { 
   BarChart3, 
   Users, 
@@ -11,8 +12,11 @@ import {
   TrendingUp,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Crown
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import ProUpgradeModal from './ProUpgradeModal';
 
 interface SidebarProps {
   currentView: string;
@@ -22,6 +26,9 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isOpen, onToggle }) => {
+  const { isPro } = useAuth();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'customers', label: 'Customers', icon: Users },
@@ -84,17 +91,40 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isOpen, 
         })}
       </nav>
 
-      {isOpen && (
+      {isOpen && !isPro && (
         <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white">
-            <h4 className="font-semibold text-sm">Upgrade to Pro</h4>
-            <p className="text-xs text-blue-100 mt-1">Get advanced analytics and automation</p>
-            <button className="mt-2 bg-white text-blue-600 px-3 py-1 rounded text-xs font-medium hover:bg-blue-50 transition-colors">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-4 text-white">
+            <div className="flex items-center space-x-2 mb-2">
+              <Crown className="w-4 h-4 text-yellow-300" />
+              <h4 className="font-semibold text-sm">Upgrade to Pro</h4>
+            </div>
+            <p className="text-xs text-purple-100 mt-1">Get advanced analytics and automation</p>
+            <button 
+              onClick={() => setShowUpgradeModal(true)}
+              className="mt-2 bg-white text-purple-600 px-3 py-1 rounded text-xs font-medium hover:bg-purple-50 transition-colors"
+            >
               Learn More
             </button>
           </div>
         </div>
       )}
+
+      {isOpen && isPro && (
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 text-white">
+            <div className="flex items-center space-x-2 mb-2">
+              <Crown className="w-4 h-4" />
+              <h4 className="font-semibold text-sm">CRM Pro Active</h4>
+            </div>
+            <p className="text-xs text-yellow-100">You have access to all premium features</p>
+          </div>
+        </div>
+      )}
+
+      <ProUpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+      />
     </div>
   );
 };

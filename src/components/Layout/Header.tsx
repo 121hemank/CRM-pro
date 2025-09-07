@@ -1,5 +1,7 @@
 import React from 'react';
-import { Search, Bell, Menu, User } from 'lucide-react';
+import { Search, Menu, User, LogOut } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 
 interface HeaderProps {
   currentView: string;
@@ -7,6 +9,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ currentView, onMenuToggle }) => {
+  const { user, signOut } = useAuth();
+
   const getPageTitle = () => {
     const titles: Record<string, string> = {
       dashboard: 'Dashboard',
@@ -46,19 +50,25 @@ const Header: React.FC<HeaderProps> = ({ currentView, onMenuToggle }) => {
             />
           </div>
           
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationDropdown />
 
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-700">John Doe</p>
-              <p className="text-xs text-gray-500">Sales Manager</p>
+              <p className="text-sm font-medium text-gray-700">
+                {user?.user_metadata?.first_name} {user?.user_metadata?.last_name}
+              </p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
+            <button
+              onClick={signOut}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-800"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
