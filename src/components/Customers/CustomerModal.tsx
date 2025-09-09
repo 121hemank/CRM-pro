@@ -4,13 +4,40 @@ import { Customer } from '../../types/Customer';
 
 interface CustomerModalProps {
   customer: Customer | null;
+  onSave: (customerData: any) => Promise<boolean>;
   onClose: () => void;
 }
 
-const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
+const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onSave, onClose }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: customer?.first_name || '',
+    last_name: customer?.last_name || '',
+    email: customer?.email || '',
+    phone: customer?.phone || '',
+    job_title: customer?.job_title || '',
+    status: customer?.status || 'prospect'
+  });
   const isEditing = customer !== null;
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const success = await onSave(formData);
+    if (success) {
+      onClose();
+    }
+    setLoading(false);
+  };
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'activities', label: 'Activities' },
@@ -55,25 +82,31 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
           {activeTab === 'overview' && (
-            <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name
+                    First Name
                   </label>
                   <input
                     type="text"
-                    defaultValue={customer?.name || ''}
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                    required
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Company
+                    Last Name
                   </label>
                   <input
                     type="text"
-                    defaultValue={customer?.company || ''}
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleInputChange}
+                    required
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -83,7 +116,10 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
                   </label>
                   <input
                     type="email"
-                    defaultValue={customer?.email || ''}
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -93,17 +129,21 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
                   </label>
                   <input
                     type="tel"
-                    defaultValue={customer?.phone || ''}
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
+                    Job Title
                   </label>
                   <input
                     type="text"
-                    defaultValue={customer?.location || ''}
+                    name="job_title"
+                    value={formData.job_title}
+                    onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -112,7 +152,9 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
                     Status
                   </label>
                   <select
-                    defaultValue={customer?.status || 'prospect'}
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="prospect">Prospect</option>
@@ -122,40 +164,23 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
                 </div>
               </div>
 
-              {isEditing && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <DollarSign className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="text-sm text-gray-600">Total Value</p>
-                      <p className="font-semibold text-gray-900">${customer.value.toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-600">Last Contact</p>
-                      <p className="font-semibold text-gray-900">
-                        {new Date(customer.lastContact).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Tag className="w-5 h-5 text-purple-600" />
-                    <div>
-                      <p className="text-sm text-gray-600">Tags</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {customer.tags.map((tag, index) => (
-                          <span key={index} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Customer')}
+                </button>
+              </div>
+            </form>
           )}
 
           {activeTab === 'activities' && isEditing && (
@@ -180,17 +205,6 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose }) => {
           )}
         </div>
 
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            {isEditing ? 'Save Changes' : 'Create Customer'}
-          </button>
-        </div>
       </div>
     </div>
   );

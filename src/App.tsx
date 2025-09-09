@@ -4,6 +4,8 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import LoginPage from './components/Auth/LoginPage';
+import AdminPanel from './components/Admin/AdminPanel';
+import EmployeePanel from './components/Employee/EmployeePanel';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -18,7 +20,7 @@ import SalesPerformance from './components/Analytics/SalesPerformance';
 import Settings from './components/Settings/Settings';
 
 const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -37,6 +39,14 @@ const AppContent: React.FC = () => {
     return <LoginPage />;
   }
 
+  // Role-based routing
+  if (userRole === 'admin') {
+    return <AdminPanel />;
+  }
+
+  if (userRole === 'employee') {
+    return <EmployeePanel />;
+  }
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':

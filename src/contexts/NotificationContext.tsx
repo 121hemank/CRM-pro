@@ -80,21 +80,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Simulate real-time notifications
   useEffect(() => {
-    const interval = setInterval(() => {
-      const randomNotifications = [
-        { title: 'New Lead', message: 'New lead from website form', type: 'info' as const },
-        { title: 'Deal Updated', message: 'Deal moved to negotiation stage', type: 'success' as const },
-        { title: 'Follow-up Due', message: 'Follow-up with John Doe is due', type: 'warning' as const },
-        { title: 'Meeting Reminder', message: 'Meeting with TechCorp in 30 minutes', type: 'info' as const }
-      ]
-      
-      if (Math.random() > 0.7) { // 30% chance every 30 seconds
-        const randomNotification = randomNotifications[Math.floor(Math.random() * randomNotifications.length)]
-        addNotification(randomNotification)
-      }
-    }, 30000) // Every 30 seconds
-
-    return () => clearInterval(interval)
+    // Real-time notifications will be triggered by actual user actions
+    // No auto-generated notifications
   }, [])
 
   const value = {

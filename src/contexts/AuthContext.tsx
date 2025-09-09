@@ -2,10 +2,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import BusinessSetup from '../components/Auth/BusinessSetup'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
+  userRole: string | null
+  businessProfile: any | null
+  needsBusinessSetup: boolean
   signIn: (email: string, password: string) => Promise<boolean>
   signUp: (email: string, password: string, userData: any) => Promise<boolean>
   signOut: () => Promise<void>
@@ -27,12 +31,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPro, setIsPro] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [businessProfile, setBusinessProfile] = useState<any | null>(null)
+  const [needsBusinessSetup, setNeedsBusinessSetup] = useState(false)
 
+  const fetchUserData = async (userId: string) => {
+    try {
+      // Fetch business profile
+      const { data: businessData } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      // Fetch user role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      setBusinessProfile(businessData)
+      setUserRole(roleData?.role || null)
+      setNeedsBusinessSetup(!businessData)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      setNeedsBusinessSetup(true)
+    }
+  }
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setIsPro(session?.user?.user_metadata?.subscription === 'pro')
+      if (session?.user) {
+        fetchUserData(session.user.id)
+      }
       setLoading(false)
     })
 
@@ -41,6 +75,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         setUser(session?.user ?? null)
         setIsPro(session?.user?.user_metadata?.subscription === 'pro')
+        if (session?.user) {
+          await fetchUserData(session.user.id)
+        } else {
+          setUserRole(null)
+          setBusinessProfile(null)
+          setNeedsBusinessSetup(false)
+        }
         setLoading(false)
       }
     )
@@ -97,6 +138,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         toast.error(error.message)
       } else {
+        setUserRole(null)
+        setBusinessProfile(null)
+        setNeedsBusinessSetup(false)
         toast.success('Signed out successfully')
       }
     } catch (error) {
@@ -125,6 +169,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     loading,
+    userRole,
+    businessProfile,
+    needsBusinessSetup,
     signIn,
     signUp,
     signOut,
@@ -132,6 +179,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     upgradeToPro
   }
 
+  if (needsBusinessSetup && user && !loading) {
+    return (
+      <AuthContext.Provider value={value}>
+        <BusinessSetup onComplete={() => {
+          setNeedsBusinessSetup(false)
+          if (user) fetchUserData(user.id)
+        }} />
+      </AuthContext.Provider>
+    )
+  }
   return (
     <AuthContext.Provider value={value}>
       {children}

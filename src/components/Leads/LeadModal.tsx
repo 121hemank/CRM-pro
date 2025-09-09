@@ -4,13 +4,49 @@ import { Lead } from '../../types/Lead';
 
 interface LeadModalProps {
   lead: Lead | null;
+  onSave: (leadData: any) => Promise<boolean>;
   onClose: () => void;
 }
 
-const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
+const LeadModal: React.FC<LeadModalProps> = ({ lead, onSave, onClose }) => {
   const [score, setScore] = useState(lead?.score || 50);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: lead?.name?.split(' ')[0] || '',
+    last_name: lead?.name?.split(' ').slice(1).join(' ') || '',
+    email: lead?.email || '',
+    phone: lead?.phone || '',
+    company: lead?.company || '',
+    status: lead?.stage || 'new',
+    source: lead?.source || 'Website',
+    value: lead?.value || 0,
+    assigned_to: lead?.assignedTo || 'John Doe',
+    notes: lead?.notes || ''
+  });
   const isEditing = lead !== null;
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const leadData = {
+      ...formData,
+      probability: score
+    };
+    
+    const success = await onSave(leadData);
+    if (success) {
+      onClose();
+    }
+    setLoading(false);
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
@@ -27,15 +63,31 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
+                  First Name
                 </label>
                 <input
                   type="text"
-                  defaultValue={lead?.name || ''}
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleInputChange}
+                  required
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -45,7 +97,9 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                 </label>
                 <input
                   type="text"
-                  defaultValue={lead?.company || ''}
+                  name="company"
+                  value={formData.company}
+                  onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -55,7 +109,10 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                 </label>
                 <input
                   type="email"
-                  defaultValue={lead?.email || ''}
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -65,7 +122,9 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                 </label>
                 <input
                   type="tel"
-                  defaultValue={lead?.phone || ''}
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -74,7 +133,9 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                   Stage
                 </label>
                 <select
-                  defaultValue={lead?.stage || 'new'}
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="new">New</option>
@@ -88,7 +149,9 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                   Lead Source
                 </label>
                 <select
-                  defaultValue={lead?.source || 'Website'}
+                  name="source"
+                  value={formData.source}
+                  onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="Website">Website</option>
@@ -109,7 +172,9 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                   <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="number"
-                    defaultValue={lead?.value || 0}
+                    name="value"
+                    value={formData.value}
+                    onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -119,7 +184,9 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
                   Assigned To
                 </label>
                 <select
-                  defaultValue={lead?.assignedTo || 'John Doe'}
+                  name="assigned_to"
+                  value={formData.assigned_to}
+                  onChange={handleInputChange}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="John Doe">John Doe</option>
@@ -154,46 +221,33 @@ const LeadModal: React.FC<LeadModalProps> = ({ lead, onClose }) => {
               </label>
               <textarea
                 rows={4}
-                defaultValue={lead?.notes || ''}
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Add notes about this lead..."
               />
             </div>
 
-            {isEditing && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <p className="text-sm text-gray-600">Lead Score</p>
-                    <p className="font-semibold text-gray-900">{lead.score}/100</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Last Contact</p>
-                    <p className="font-semibold text-gray-900">
-                      {new Date(lead.lastContact).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Lead')}
+              </button>
+            </div>
+          </form>
         </div>
 
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            {isEditing ? 'Save Changes' : 'Create Lead'}
-          </button>
-        </div>
       </div>
     </div>
   );

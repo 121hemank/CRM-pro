@@ -5,76 +5,29 @@ import { Lead } from '../../types/Lead';
 interface LeadListProps {
   searchTerm: string;
   filterStage: string;
+  leads: any[];
+  loading: boolean;
   onLeadSelect: (lead: Lead) => void;
 }
 
-const LeadList: React.FC<LeadListProps> = ({ searchTerm, filterStage, onLeadSelect }) => {
-  const leads: Lead[] = [
-    {
-      id: 1,
-      leadId: 'LEAD-001',
-      name: 'Alex Thompson',
-      email: 'alex@newcompany.com',
-      phone: '+1 (555) 111-2222',
-      company: 'New Company Inc',
-      stage: 'qualified',
-      score: 85,
-      value: 75000,
-      source: 'Website',
-      assignedTo: 'John Doe',
-      lastContact: '2024-01-16',
-      notes: 'Interested in enterprise solution',
-      timeToClose: 25,
-      interactions: [
-        {
-          id: 1,
-          type: 'email',
-          date: '2024-01-16',
-          notes: 'Sent product information and pricing',
-          channel: 'email'
-        }
-      ]
-    },
-    {
-      id: 2,
-      leadId: 'LEAD-002',
-      name: 'Jessica Lee',
-      email: 'j.lee@futuretech.com',
-      phone: '+1 (555) 333-4444',
-      company: 'Future Tech',
-      stage: 'contacted',
-      score: 72,
-      value: 120000,
-      source: 'LinkedIn',
-      assignedTo: 'Jane Smith',
-      lastContact: '2024-01-15',
-      notes: 'Demo scheduled for next week',
-      timeToClose: 18,
-      interactions: []
-    },
-    {
-      id: 3,
-      leadId: 'LEAD-003',
-      name: 'Robert Wilson',
-      email: 'rwilson@innovate.io',
-      phone: '+1 (555) 555-6666',
-      company: 'Innovate Solutions',
-      stage: 'new',
-      score: 45,
-      value: 35000,
-      source: 'Cold Email',
-      assignedTo: 'Mike Johnson',
-      lastContact: '2024-01-14',
-      notes: 'Initial contact made',
-      interactions: []
-    }
-  ];
+const LeadList: React.FC<LeadListProps> = ({ searchTerm, filterStage, leads, loading, onLeadSelect }) => {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading leads...</p>
+        </div>
+      </div>
+    );
+  }
 
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const fullName = `${lead.first_name} ${lead.last_name}`;
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.company.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStage === 'all' || lead.stage === filterStage;
+                         (lead.company || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStage === 'all' || lead.status === filterStage;
     return matchesSearch && matchesFilter;
   });
 
@@ -96,6 +49,11 @@ const LeadList: React.FC<LeadListProps> = ({ searchTerm, filterStage, onLeadSele
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {filteredLeads.length === 0 ? (
+        <div className="p-8 text-center">
+          <p className="text-gray-500">No leads found</p>
+        </div>
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -114,9 +72,9 @@ const LeadList: React.FC<LeadListProps> = ({ searchTerm, filterStage, onLeadSele
               <tr key={lead.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="py-4 px-6">
                   <div>
-                    <div className="font-semibold text-gray-900">{lead.name}</div>
-                    <div className="text-sm text-gray-600">{lead.company}</div>
-                    <div className="text-xs text-gray-500 mt-1">Source: {lead.source}</div>
+                    <div className="font-semibold text-gray-900">{lead.first_name} {lead.last_name}</div>
+                    <div className="text-sm text-gray-600">{lead.company || 'N/A'}</div>
+                    <div className="text-xs text-gray-500 mt-1">Source: {lead.source || 'N/A'}</div>
                   </div>
                 </td>
                 <td className="py-4 px-6">
@@ -127,34 +85,34 @@ const LeadList: React.FC<LeadListProps> = ({ searchTerm, filterStage, onLeadSele
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Phone className="w-3 h-3 mr-2" />
-                      {lead.phone}
+                      {lead.phone || 'N/A'}
                     </div>
                   </div>
                 </td>
                 <td className="py-4 px-6">
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
-                    {lead.stage.charAt(0).toUpperCase() + lead.stage.slice(1)}
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStageColor(lead.status)}`}>
+                    {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
                   </span>
                 </td>
                 <td className="py-4 px-6">
                   <div className="flex items-center space-x-2">
-                    <Star className={`w-4 h-4 ${getScoreColor(lead.score)}`} />
-                    <span className={`font-semibold ${getScoreColor(lead.score)}`}>
-                      {lead.score}
+                    <Star className={`w-4 h-4 ${getScoreColor(lead.probability || 50)}`} />
+                    <span className={`font-semibold ${getScoreColor(lead.probability || 50)}`}>
+                      {lead.probability || 50}
                     </span>
                   </div>
                 </td>
                 <td className="py-4 px-6">
                   <div className="flex items-center font-semibold text-gray-900">
                     <DollarSign className="w-4 h-4 mr-1" />
-                    {lead.value.toLocaleString()}
+                    {(lead.value || 0).toLocaleString()}
                   </div>
                 </td>
                 <td className="py-4 px-6">
-                  <div className="text-sm text-gray-600">{lead.assignedTo}</div>
+                  <div className="text-sm text-gray-600">{lead.assigned_to || 'Unassigned'}</div>
                   <div className="flex items-center text-xs text-gray-500 mt-1">
                     <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(lead.lastContact).toLocaleDateString()}
+                    {new Date(lead.created_at).toLocaleDateString()}
                   </div>
                 </td>
                 <td className="py-4 px-6">
@@ -171,6 +129,7 @@ const LeadList: React.FC<LeadListProps> = ({ searchTerm, filterStage, onLeadSele
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 };

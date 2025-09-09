@@ -3,8 +3,10 @@ import LeadList from './LeadList';
 import LeadSearch from './LeadSearch';
 import LeadModal from './LeadModal';
 import { Lead } from '../../types/Lead';
+import { useLeads } from '../../hooks/useLeads';
 
 const Leads: React.FC = () => {
+  const { leads, loading, addLead } = useLeads();
   const [showModal, setShowModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +27,9 @@ const Leads: React.FC = () => {
     setSelectedLead(null);
   };
 
+  const handleSaveLead = async (leadData: any) => {
+    return await addLead(leadData);
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -50,12 +55,15 @@ const Leads: React.FC = () => {
       <LeadList 
         searchTerm={searchTerm}
         filterStage={filterStage}
+        leads={leads}
+        loading={loading}
         onLeadSelect={handleLeadSelect}
       />
 
       {showModal && (
         <LeadModal
           lead={selectedLead}
+          onSave={handleSaveLead}
           onClose={handleModalClose}
         />
       )}
