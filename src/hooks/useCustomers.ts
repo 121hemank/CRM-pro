@@ -36,6 +36,7 @@ export const useCustomers = () => {
       })
       return true
     } catch (error) {
+      console.error('Error creating customer:', error)
       addNotification({
         title: 'Error',
         message: 'Failed to create customer',

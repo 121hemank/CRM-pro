@@ -36,6 +36,7 @@ export const useLeads = () => {
       })
       return true
     } catch (error) {
+      console.error('Error creating lead:', error)
       addNotification({
         title: 'Error',
         message: 'Failed to create lead',

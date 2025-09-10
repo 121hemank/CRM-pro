@@ -2,14 +2,12 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
-import BusinessSetup from '../components/Auth/BusinessSetup'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   userRole: string | null
   businessProfile: any | null
-  needsBusinessSetup: boolean
   signIn: (email: string, password: string) => Promise<boolean>
   signUp: (email: string, password: string, userData: any) => Promise<boolean>
   signOut: () => Promise<void>
@@ -33,7 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isPro, setIsPro] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [businessProfile, setBusinessProfile] = useState<any | null>(null)
-  const [needsBusinessSetup, setNeedsBusinessSetup] = useState(false)
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -53,10 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setBusinessProfile(businessData)
       setUserRole(roleData?.role || null)
-      setNeedsBusinessSetup(!businessData)
     } catch (error) {
       console.error('Error fetching user data:', error)
-      setNeedsBusinessSetup(true)
+      setUserRole('user')
     }
   }
   useEffect(() => {
@@ -79,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await fetchUserData(session.user.id)
         } else {
           setUserRole(null)
-          setBusinessProfile(null)
           setNeedsBusinessSetup(false)
         }
         setLoading(false)
@@ -139,7 +134,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(error.message)
       } else {
         setUserRole(null)
-        setBusinessProfile(null)
         setNeedsBusinessSetup(false)
         toast.success('Signed out successfully')
       }
@@ -170,7 +164,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     userRole,
-    businessProfile,
     needsBusinessSetup,
     signIn,
     signUp,
@@ -178,16 +171,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isPro,
     upgradeToPro
   }
-
-  if (needsBusinessSetup && user && !loading) {
-    return (
-      <AuthContext.Provider value={value}>
-        <BusinessSetup onComplete={() => {
-          setNeedsBusinessSetup(false)
-          if (user) fetchUserData(user.id)
-        }} />
-      </AuthContext.Provider>
-    )
   }
   return (
     <AuthContext.Provider value={value}>

@@ -50,7 +50,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onSave, onClose
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">
-            {isEditing ? `${customer.name} - ${customer.company}` : 'Add New Customer'}
+            {isEditing ? `${customer.first_name} ${customer.last_name}` : 'Add New Customer'}
           </h2>
           <button
             onClick={onClose}
