@@ -4,6 +4,8 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import LoginPage from './components/Auth/LoginPage';
+import AdminLogin from './components/Admin/AdminLogin';
+import EmployeeLogin from './components/Employee/EmployeeLogin';
 import AdminPanel from './components/Admin/AdminPanel';
 import EmployeePanel from './components/Employee/EmployeePanel';
 import Sidebar from './components/Layout/Sidebar';
@@ -20,6 +22,8 @@ import SalesPerformance from './components/Analytics/SalesPerformance';
 import Settings from './components/Settings/Settings';
 
 const AppContent: React.FC = () => {
+  const [loginType, setLoginType] = useState<'user' | 'admin' | 'employee'>('user');
+  
   const { user, loading, userRole } = useAuth();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -36,7 +40,31 @@ const AppContent: React.FC = () => {
   }
 
   if (!user) {
-    return <LoginPage />;
+    if (loginType === 'admin') {
+      return (
+        <div>
+          <AdminLogin />
+          <button onClick={() => setLoginType('user')} className="fixed top-4 left-4 text-blue-600">← Back to User Login</button>
+        </div>
+      );
+    }
+    if (loginType === 'employee') {
+      return (
+        <div>
+          <EmployeeLogin />
+          <button onClick={() => setLoginType('user')} className="fixed top-4 left-4 text-blue-600">← Back to User Login</button>
+        </div>
+      );
+    }
+    return (
+      <div>
+        <LoginPage />
+        <div className="fixed top-4 right-4 space-x-2">
+          <button onClick={() => setLoginType('admin')} className="bg-red-600 text-white px-3 py-1 rounded text-sm">Admin Login</button>
+          <button onClick={() => setLoginType('employee')} className="bg-green-600 text-white px-3 py-1 rounded text-sm">Employee Login</button>
+        </div>
+      </div>
+    );
   }
 
   // Role-based routing

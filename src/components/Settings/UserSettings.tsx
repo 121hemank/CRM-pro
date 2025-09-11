@@ -1,7 +1,10 @@
 import React from 'react';
 import { User, Mail, Phone, Globe } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const UserSettings: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-6">
       <div>
@@ -14,7 +17,7 @@ const UserSettings: React.FC = () => {
             </label>
             <input
               type="text"
-              defaultValue="John Doe"
+              defaultValue={`${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim() || 'User Name'}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -25,7 +28,7 @@ const UserSettings: React.FC = () => {
             </label>
             <input
               type="email"
-              defaultValue="john.doe@company.com"
+              defaultValue={user?.email || ''}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -36,7 +39,7 @@ const UserSettings: React.FC = () => {
             </label>
             <input
               type="tel"
-              defaultValue="+1 (555) 123-4567"
+              defaultValue={user?.user_metadata?.phone || ''}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>

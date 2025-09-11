@@ -1,5 +1,7 @@
 import React from 'react';
 import { Search, Filter, Calendar, Download } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 interface ActivitySearchProps {
   searchTerm: string;
@@ -18,6 +20,42 @@ const ActivitySearch: React.FC<ActivitySearchProps> = ({
   filterDate,
   setFilterDate
 }) => {
+  const handleExport = async () => {
+    try {
+      const { data: activities, error } = await supabase
+        .from('activities')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Convert to CSV
+      const headers = ['Type', 'Subject', 'Description', 'Date'];
+      const csvContent = [
+        headers.join(','),
+        ...activities.map(activity => [
+          activity.type,
+          activity.subject,
+          activity.description || '',
+          new Date(activity.created_at).toLocaleDateString()
+        ].join(','))
+      ].join('\n');
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `activities-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Activities exported successfully');
+    } catch (error: any) {
+      toast.error('Failed to export activities');
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -65,7 +103,10 @@ const ActivitySearch: React.FC<ActivitySearchProps> = ({
         </div>
 
         <div className="flex items-center space-x-3">
-          <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg px-4 py-2 transition-colors">
+          <button 
+            onClick={handleExport}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg px-4 py-2 transition-colors"
+          >
             <Download className="w-4 h-4" />
             <span className="text-sm font-medium">Export</span>
           </button>

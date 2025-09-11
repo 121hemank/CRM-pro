@@ -1,5 +1,7 @@
 import React from 'react';
 import { Search, Filter, Download } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 interface CustomerSearchProps {
   searchTerm: string;
@@ -14,6 +16,44 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({
   filterStatus,
   setFilterStatus
 }) => {
+  const handleExport = async () => {
+    try {
+      const { data: customers, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Convert to CSV
+      const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Job Title', 'Status'];
+      const csvContent = [
+        headers.join(','),
+        ...customers.map(customer => [
+          customer.first_name,
+          customer.last_name,
+          customer.email,
+          customer.phone || '',
+          customer.job_title || '',
+          customer.status
+        ].join(','))
+      ].join('\n');
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `customers-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Customers exported successfully');
+    } catch (error: any) {
+      toast.error('Failed to export customers');
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -45,7 +85,10 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({
         </div>
 
         <div className="flex items-center space-x-3">
-          <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg px-4 py-2 transition-colors">
+          <button 
+            onClick={handleExport}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg px-4 py-2 transition-colors"
+          >
             <Download className="w-4 h-4" />
             <span className="text-sm font-medium">Export</span>
           </button>
